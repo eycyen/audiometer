@@ -11,6 +11,6 @@ This project integrates software algorithms with hardware interfaces to provide 
 
 ## Quick Start
 ```bash
-git clone [https://github.com/your-username/audiometer.git](https://github.com/your-username/audiometer.git)
+git clone [https://github.com/eycyen/audiometer.git](https://github.com/your-username/audiometer.git)
 cd audiometer
 mvn clean javafx:run
