@@ -1,95 +1,147 @@
 package com.ankara.audiometer.view;
 
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.geometry.*;
 
-public class AudiogramGraph extends  BorderPane{
+public class AudiogramGraph extends BorderPane{
+    private Canvas canvas;
+    private GraphicsContext gc;
+
     private Label hearingLabel;
     private Label frequencyLabel;
-    private GridPane  decibelLevels;
-    private GridPane  hertzLevels;
-    private GridPane graphGrid;
-    private int columns = 7;
-    private int rows = 13;
+
+    public Pane audioGraph;
+    private final int[] FREQUENCIES = {250, 500, 1000, 2000,  4000, 8000};
+    private final int MIN_DB = -10;
+    private final int MAX_DB = 120;
+
+    // Padding and spacing for the grid
+    private double padding;
+    private double spacingX,spacingY;
 
     public AudiogramGraph(){
-        setPrefSize(400, 400);
-        setPadding(new Insets(20,10,20,10));
+        setPrefSize(1200, 800);
+        setPadding(new Insets( 20, 0, 0, 0));
         setStyle("-fx-background-color: white;");
 
         this.frequencyLabel = new Label("Frequency Level (Hz)");
+        frequencyLabel.setFont(new Font(16));
         this.hearingLabel = new Label("Hearing Level (db) ");
+        hearingLabel.setFont(new Font(16));
         hearingLabel.setRotate(-90.0);
 
-        //Plot grid columns and rows
-        this.graphGrid = new GridPane();
-        for(int i = 0; i<columns; i++)
-        {
-            ColumnConstraints colConst = new ColumnConstraints();
-            colConst.setPercentWidth(100.00/columns);
-            graphGrid.getColumnConstraints().add(colConst);
+        this.canvas = new Canvas(1100,800);
+        this.gc = canvas.getGraphicsContext2D();
+        
+        this.padding = 50;
+        this.spacingX = (canvas.getWidth() - padding * 2) / (FREQUENCIES.length - 1);
+        this.spacingY = (canvas.getHeight() - padding * 2) / (MAX_DB - MIN_DB) * 10; // 10 dB steps
+
+        // Draw the audiogram grid
+        gc.setFill(Color.WHITE);
+        gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
+        drawGrid();
+
+        plotPointO(1000, 30);
+        plotPointX(2000, 50);
+
+        // Place elements in appropriate areas on the BorderPane
+        setTop(frequencyLabel);
+        setAlignment(frequencyLabel, Pos.CENTER);
+        setLeft(hearingLabel);
+        setAlignment(hearingLabel, Pos.CENTER);
+        setCenter(canvas);
+        setAlignment(canvas, Pos.CENTER);
+    }
+
+    public void drawGrid() {
+        gc.setStroke(Color.LIGHTGRAY);
+         // Draw vertical lines and frequency labels
+        for (int i = 0 ; i < FREQUENCIES.length ; i++) {
+            double currentX = padding + (i * spacingX);
+
+            // Draw vertical line for current frequency
+            gc.setStroke(Color.LIGHTGRAY);
+            gc.strokeLine(currentX, padding, currentX, canvas.getHeight() - padding);
+
+            // Draw the text label for the frequency
+            gc.setFill(Color.BLACK);
+            // currentX - 12 to center the text above the line, padding - 15 to position it above the top line
+            gc.fillText(String.valueOf(FREQUENCIES[i]), currentX - 12, padding - 15);
         }
-        for(int j = 0; j<rows;j++)
-        {
-            RowConstraints rowConst = new RowConstraints();
-            rowConst.setPercentHeight(100.00/rows);
-            graphGrid.getRowConstraints().add(rowConst);
+         // Draw horizontal lines for dB levels and labels
+        for (int i = 0 ; i < ((MAX_DB - MIN_DB) / 10) + 1; i++) {
+            double currentY = padding + (i * spacingY);
+
+            // Draw horizontal line for current dB level
+            gc.setStroke(Color.LIGHTGRAY);
+            gc.strokeLine(padding, currentY, canvas.getWidth() - padding , currentY);
+
+            // Draw the text label for the dB level
+            gc.setFill(Color.BLACK);
+            // currentY + 5 to position it slightly below the line, padding - 30 to position it to the left of the line
+            gc.fillText(String.valueOf(MIN_DB + (i * 10)), padding - 30, currentY + 5);
         }
 
-        //Place Panes into GridPane to draw borders and access individual cells
-        Pane[][] gridPanes = new Pane[rows][columns];
-        for(int i = 0; i<columns; i++){   
-            for(int j = 0; j<rows; j++){
-                Pane pane = new Pane();
-                pane.setStyle("-fx-border-color: black; -fx-border-width: 0.2;");
-                graphGrid.add(pane, i, j);
-                gridPanes[j][i] = pane;
+    }
+
+    // Method to plot a point for the right ear (O) based on frequency and intensity
+    public void plotPointO(int frequency, int intensity) {
+
+        // Find the index of the frequency in the FREQUENCIES array
+        int freqIndex = -1;
+        for (int i = 0; i < FREQUENCIES.length; i++) {
+            if (FREQUENCIES[i] == frequency) {
+                freqIndex = i;
+                break;
             }
         }
 
-        //Plot the vertical graph labels
-        this.decibelLevels = new GridPane();
-        int decibels = -10;
-        for(int j =0; j<14; j++)
-        {
-            RowConstraints rowConst = new RowConstraints();
-            rowConst.setPercentHeight(15);
-            if(j==13)
-                rowConst.setPercentHeight(7.5);
-            decibelLevels.getRowConstraints().add(rowConst);
-            Pane pane = new Pane(new Label(String.valueOf((int)(decibels + 10*j))));
-            decibelLevels.add(pane, 0,j);
+        // If frequency is not found, throw an exception
+        if (freqIndex == -1) {
+            throw new IllegalArgumentException("Invalid frequency: " + frequency);
         }
-        decibelLevels.setPadding(new Insets(0,0,-20,0));
 
-        //Plot the horizontal graph labels
-        this.hertzLevels = new GridPane();
-        int hertzs = 250;
-        for(int i = 0; i<7; i++)
-        {
-            ColumnConstraints colConst = new ColumnConstraints();
-            colConst.setPercentWidth(14.3);
-            hertzLevels.getColumnConstraints().add(colConst);
-            Pane pane = new Pane();
-            if(i!=0)
-                pane.getChildren().add((new Label(String.valueOf((int)(hertzs*(Math.pow(2, i-1)))))));
-            hertzLevels.add(pane, i, 0);
-        }
-        hertzLevels.setPadding(new Insets(0,0,0, 110));
+        // Calculate the x and y coordinates for the point based on the frequency index and intensity
+        double x = padding + (freqIndex * spacingX);
+        double y = padding + ((intensity - MIN_DB) / 10.0 * spacingY);
 
-        //Add components to be placed on the top via VBox
-        VBox topNodes = new VBox();
-        topNodes.getChildren().addAll(frequencyLabel,hertzLevels);
-        topNodes.setAlignment(Pos.CENTER);
-        setTop(topNodes);
-
-        //Add components to be placed on the left via HBox
-        HBox leftNodes = new HBox(); 
-        leftNodes.getChildren().addAll(hearingLabel, decibelLevels);
-        leftNodes.setAlignment(Pos.CENTER);
-        setLeft(leftNodes);
-
-        setCenter(graphGrid);
+        // Draw a point at the calculated coordinates
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(2.0); // Set line width for better visibility
+        gc.strokeOval(x - 5, y - 5, 10, 10); // Draw a circle with radius 5
     }
+
+    // Same thing as plotPointO but for X points (left ear)
+    public void plotPointX(int frequency, int intensity) {
+
+        // Find the index of the frequency in the FREQUENCIES array
+        int freqIndex = -1;
+        for (int i = 0; i < FREQUENCIES.length; i++) {
+            if (FREQUENCIES[i] == frequency) {
+                freqIndex = i;
+                break;
+            }
+        }
+
+        // If frequency is not found, throw an exception
+        if (freqIndex == -1) {
+            throw new IllegalArgumentException("Invalid frequency: " + frequency);
+        }
+
+        // Calculate the x and y coordinates for the point based on the frequency index and intensity
+        double x = padding + (freqIndex * spacingX);
+        double y = padding + ((intensity - MIN_DB) / 10.0 * spacingY);
+
+        // Draw a point at the calculated coordinates
+        gc.setStroke(Color.BLUE);
+        gc.setLineWidth(1.0); // Set line width for better visibility
+        gc.strokeText("X", x - 5, y + 5); // Draw an X at the point
+    }
+
 }
