@@ -38,10 +38,14 @@ public class ControlPanel extends VBox {
         intensitySlider.setMajorTickUnit(10);
         intensitySlider.setMinorTickCount(1);
         intensitySlider.setSnapToTicks(true);
+        intensitySlider.setBlockIncrement(10);
 
         // Update intensity value label when slider changes
         intensitySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            intensityValueLabel.setText(String.format("Current: %.0f dB HL", newVal.doubleValue()));
+            double step = 5.0;
+            double roundedValue = Math.round(newVal.doubleValue() / step) * step;
+
+            intensityValueLabel.setText(String.format("Current: %.0f dB HL", roundedValue));
         });
 
         // Set button to fill available width
