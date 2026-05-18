@@ -58,6 +58,30 @@ public class ControlPanel extends VBox {
         // Put ear buttons in a HBox for better visibilty
         HBox earBox = new HBox(15,leftEarButton,rightEarButton);
 
+        sendSignalButton.setOnAction(event -> {
+            int intensity = getSelectedIntensity();
+            Integer freq = getSelectedFrequency();
+            Boolean isRightEar = isRightEarSelected();
+
+            if (freq == null || isRightEar == null) {
+                System.out.println("WARNING: Signal was not send! Please select an ear or frequency.");
+                responseStatusLabel.setText("Status: Error - Missing Selections");
+                return;
+            }
+
+            // TODO: (Hardware and logic integration)
+            // 1. Send "freq","intensity","isRightEar" data to external script
+            // 2. Trigger actual audio generation via Proteus hardware interface
+            // 3. Await patient response trigger (e.g. patient pressing physical or GUI button)
+            // 4. Update AudiogramGraph dynamically based on the algorithmic response
+
+            System.out.println("--- SIGNAL TRIGGERED ---");
+            System.out.printf("Selected ear : %s\n", isRightEar ? "Right" : "Left");
+            System.out.printf("Frequency    : %d Hz\n",freq);
+            System.out.printf("Intensity    : %d dB HL\n",intensity);
+            responseStatusLabel.setText(String.format("Status: %d Hz @ %d dB Sent", freq, intensity));
+        });
+
 
         // Add components to the VBox
         this.getChildren().addAll(
@@ -95,7 +119,7 @@ public class ControlPanel extends VBox {
                 return true;
             }
         }
-        
+
         // If none of the ears are selected functions returns null
         return null;
     }
