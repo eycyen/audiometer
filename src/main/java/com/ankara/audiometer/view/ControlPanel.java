@@ -12,6 +12,8 @@ public class ControlPanel extends VBox {
     private Button sendSignalButton;
     private Label responseStatusLabel;
     private Label intensityValueLabel;
+    private ToggleGroup toggleEarGroup;
+    private RadioButton leftEarButton,rightEarButton;
 
 
     public ControlPanel() {
@@ -21,7 +23,9 @@ public class ControlPanel extends VBox {
         this.sendSignalButton = new Button("Send Signal");
         this.responseStatusLabel = new Label("Status: Ready");
         this.intensityValueLabel = new Label(String.format("Current: %.0f dB HL", intensitySlider.getValue()));
-
+        this.toggleEarGroup = new ToggleGroup();
+        this.leftEarButton = new RadioButton("Left");
+        this.rightEarButton = new RadioButton("Right");
 
         // Add components to the layout
         setSpacing(20);
@@ -43,9 +47,18 @@ public class ControlPanel extends VBox {
         // Set button to fill available width
         sendSignalButton.setMaxWidth(Double.MAX_VALUE);
 
+        // Set toggle groups for left and right ear buttons respectively
+        leftEarButton.setToggleGroup(toggleEarGroup);
+        rightEarButton.setToggleGroup(toggleEarGroup);
+
+        // Put ear buttons in a HBox for better visibilty
+        HBox earBox = new HBox(15,leftEarButton,rightEarButton);
+
 
         // Add components to the VBox
         this.getChildren().addAll(
+        new Label("Select Ear:"),
+        earBox,
         new Label("Test Frequency (Hz):"),
         frequencyComboBox,
         new Label("Intensity Level (dB HL):"),
