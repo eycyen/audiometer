@@ -72,4 +72,31 @@ public class ControlPanel extends VBox {
         responseStatusLabel
     );
     }
+
+    public int getSelectedIntensity() {
+        // Return slider's value rounded up, so voice generation is flawless
+        return (int) (Math.round(intensitySlider.getValue() / 5.0) * 5.0);
+    }
+
+    public Integer getSelectedFrequency() {
+        // Return frequency from combo box
+        return frequencyComboBox.getValue();
+    }
+
+    public Boolean isRightEarSelected() {
+        // Return a boolean isRightEar based on selected toggle from the toggle group toggleEarGroup
+        RadioButton selectedEar = (RadioButton) toggleEarGroup.getSelectedToggle();
+
+        if (selectedEar != null) {
+            if (selectedEar.getText().equals("Left")) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        
+        // If none of the ears are selected functions returns null
+        return null;
+    }
 }
