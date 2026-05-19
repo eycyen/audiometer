@@ -12,6 +12,8 @@ public class ControlPanel extends VBox {
     private Button sendSignalButton;
     private Label responseStatusLabel;
     private Label intensityValueLabel;
+    private ToggleGroup toggleEarGroup;
+    private RadioButton leftEarButton,rightEarButton;
 
 
     public ControlPanel() {
@@ -21,7 +23,9 @@ public class ControlPanel extends VBox {
         this.sendSignalButton = new Button("Send Signal");
         this.responseStatusLabel = new Label("Status: Ready");
         this.intensityValueLabel = new Label(String.format("Current: %.0f dB HL", intensitySlider.getValue()));
-
+        this.toggleEarGroup = new ToggleGroup();
+        this.leftEarButton = new RadioButton("Left");
+        this.rightEarButton = new RadioButton("Right");
 
         // Add components to the layout
         setSpacing(20);
@@ -34,18 +38,55 @@ public class ControlPanel extends VBox {
         intensitySlider.setMajorTickUnit(10);
         intensitySlider.setMinorTickCount(1);
         intensitySlider.setSnapToTicks(true);
+        intensitySlider.setBlockIncrement(10);
 
         // Update intensity value label when slider changes
         intensitySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            intensityValueLabel.setText(String.format("Current: %.0f dB HL", newVal.doubleValue()));
+            double step = 5.0;
+            double roundedValue = Math.round(newVal.doubleValue() / step) * step;
+
+            intensityValueLabel.setText(String.format("Current: %.0f dB HL", roundedValue));
         });
 
         // Set button to fill available width
         sendSignalButton.setMaxWidth(Double.MAX_VALUE);
 
+        // Set toggle groups for left and right ear buttons respectively
+        leftEarButton.setToggleGroup(toggleEarGroup);
+        rightEarButton.setToggleGroup(toggleEarGroup);
+
+        // Put ear buttons in a HBox for better visibilty
+        HBox earBox = new HBox(15,leftEarButton,rightEarButton);
+
+        sendSignalButton.setOnAction(event -> {
+            int intensity = getSelectedIntensity();
+            Integer freq = getSelectedFrequency();
+            Boolean isRightEar = isRightEarSelected();
+
+            if (freq == null || isRightEar == null) {
+                System.out.println("WARNING: Signal was not send! Please select an ear or frequency.");
+                responseStatusLabel.setText("Status: Error - Missing Selections");
+                return;
+            }
+
+            // TODO: (Hardware and logic integration)
+            // 1. Send "freq","intensity","isRightEar" data to external script
+            // 2. Trigger actual audio generation via Proteus hardware interface
+            // 3. Await patient response trigger (e.g. patient pressing physical or GUI button)
+            // 4. Update AudiogramGraph dynamically based on the algorithmic response
+
+            System.out.println("--- SIGNAL TRIGGERED ---");
+            System.out.printf("Selected ear : %s\n", isRightEar ? "Right" : "Left");
+            System.out.printf("Frequency    : %d Hz\n",freq);
+            System.out.printf("Intensity    : %d dB HL\n",intensity);
+            responseStatusLabel.setText(String.format("Status: %d Hz @ %d dB Sent", freq, intensity));
+        });
+
 
         // Add components to the VBox
         this.getChildren().addAll(
+        new Label("Select Ear:"),
+        earBox,
         new Label("Test Frequency (Hz):"),
         frequencyComboBox,
         new Label("Intensity Level (dB HL):"),
@@ -54,5 +95,32 @@ public class ControlPanel extends VBox {
         sendSignalButton,
         responseStatusLabel
     );
+    }
+
+    public int getSelectedIntensity() {
+        // Return slider's value rounded up, so voice generation is flawless
+        return (int) (Math.round(intensitySlider.getValue() / 5.0) * 5.0);
+    }
+
+    public Integer getSelectedFrequency() {
+        // Return frequency from combo box
+        return frequencyComboBox.getValue();
+    }
+
+    public Boolean isRightEarSelected() {
+        // Return a boolean isRightEar based on selected toggle from the toggle group toggleEarGroup
+        RadioButton selectedEar = (RadioButton) toggleEarGroup.getSelectedToggle();
+
+        if (selectedEar != null) {
+            if (selectedEar.getText().equals("Left")) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        // If none of the ears are selected functions returns null
+        return null;
     }
 }
