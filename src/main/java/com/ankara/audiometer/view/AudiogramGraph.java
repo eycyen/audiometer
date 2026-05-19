@@ -47,8 +47,8 @@ public class AudiogramGraph extends BorderPane{
         gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
         drawGrid();
 
-        plotPointO(1000, 30);
-        plotPointX(2000, 50);
+        plotPoint(1000, 30, true); // Plot red O for right ear
+        plotPoint(2000, 50, false); // Plot blue X for left ear
 
         // Place elements in appropriate areas on the BorderPane
         setTop(frequencyLabel);
@@ -90,8 +90,8 @@ public class AudiogramGraph extends BorderPane{
 
     }
 
-    // Method to plot a point for the right ear (O) based on frequency and intensity
-    public void plotPointO(int frequency, int intensity) {
+    // Method to plot a point for the right ear (O) and left ear (X) based on frequency and intensity
+    public void plotPoint(int frequency, int intensity, boolean isRightEar) {
 
         // Find the index of the frequency in the FREQUENCIES array
         int freqIndex = -1;
@@ -112,36 +112,22 @@ public class AudiogramGraph extends BorderPane{
         double y = padding + ((intensity - MIN_DB) / 10.0 * spacingY);
 
         // Draw a point at the calculated coordinates
-        gc.setStroke(Color.RED);
-        gc.setLineWidth(2.0); // Set line width for better visibility
-        gc.strokeOval(x - 5, y - 5, 10, 10); // Draw a circle with radius 5
-    }
-
-    // Same thing as plotPointO but for X points (left ear)
-    public void plotPointX(int frequency, int intensity) {
-
-        // Find the index of the frequency in the FREQUENCIES array
-        int freqIndex = -1;
-        for (int i = 0; i < FREQUENCIES.length; i++) {
-            if (FREQUENCIES[i] == frequency) {
-                freqIndex = i;
-                break;
-            }
+        if(isRightEar) // If right ear, draw a red O
+        {  
+            gc.setStroke(Color.RED);
+            gc.setLineWidth(2.0); // Set line width for better visibility
+            gc.strokeOval(x - 7, y - 7, 14, 14); // Draw a circle with radius 7
+        }
+        else // If left ear, draw a blue X
+        {          
+            gc.setStroke(Color.BLUE);
+            gc.setLineWidth(1.0); // Set line width for better visibility
+            gc.setFont(new Font(20)); // Set font size for better visibility
+            gc.strokeText("X", x - 5, y + 5); // Draw an X outline at the point
+            gc.setFill(Color.BLUE); 
+            gc.fillText("X", x - 5, y + 5); // Fill the outlined X with the same color
         }
 
-        // If frequency is not found, throw an exception
-        if (freqIndex == -1) {
-            throw new IllegalArgumentException("Invalid frequency: " + frequency);
-        }
-
-        // Calculate the x and y coordinates for the point based on the frequency index and intensity
-        double x = padding + (freqIndex * spacingX);
-        double y = padding + ((intensity - MIN_DB) / 10.0 * spacingY);
-
-        // Draw a point at the calculated coordinates
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(1.0); // Set line width for better visibility
-        gc.strokeText("X", x - 5, y + 5); // Draw an X at the point
     }
 
 }
